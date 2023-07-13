@@ -9,6 +9,7 @@ let backlog = 10
 let handle_message msg =
   print_endline ("Received message in handle_message: " ^ msg);
   match msg with
+  | "quit" -> "quit"
   | "read" -> string_of_int !counter
   | "inc" ->
       counter := !counter + 1;
@@ -27,12 +28,19 @@ let rec handle_request server_socket =
   let message = Bytes.sub_string buffer 0 num_bytes in
   print_endline ("Received message in handle_request: " ^ message);
   let reply = handle_message message in
-  print_endline ("Replying with: " ^ reply);
-  Lwt_unix.sendto server_socket (Bytes.of_string reply) 0 (String.length reply)
-    [] client_address
-  >>= fun _ ->
-  print_endline "Reply sent";
-  handle_request (return server_socket)
+  match reply with
+  | "quit" ->
+      print_endline "Quitting Server...";
+      Lwt_unix.sendto server_socket (Bytes.of_string reply) 0
+        (String.length reply) [] client_address >>= fun _ ->
+      return ()
+  | _ ->
+      print_endline ("Replying with: " ^ reply);
+      Lwt_unix.sendto server_socket (Bytes.of_string reply) 0
+        (String.length reply) [] client_address
+      >>= fun _ ->
+      print_endline "Reply sent";
+      handle_request (return server_socket)
 
 let create_server sock =
   print_endline "Creating server";
