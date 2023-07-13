@@ -1,0 +1,4 @@
+(executable
+ (public_name udpClient)
+ (name main)
+ (libraries udpClient cmdliner logs portmidi runtime_events logs.lwt lwt stdio lwt.unix unix))
